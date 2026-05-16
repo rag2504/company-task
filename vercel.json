@@ -1,0 +1,11 @@
+{
+  "buildCommand": "cd f && npm install && npm run build",
+  "outputDirectory": "f/build",
+  "installCommand": "cd f && npm install",
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}

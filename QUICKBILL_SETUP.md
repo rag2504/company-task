@@ -92,8 +92,9 @@ See `f/.env.production.example` for the variable name. SPA routing is handled by
 1. New **Web Service** → connect the same repo.
 2. **Root Directory**: `backend`
 3. **Build Command**: `npm install`
-4. **Start Command**: `npm start` (not `npm run dev` — dev binds to localhost only).
-5. **Environment** (required):
+4. **Start Command**: `npm start` (**not** `npm run dev`).
+5. **Do not** set `HOST` or `PORT` in Render env vars (delete them if copied from `env.example`).
+6. **Environment** (required):
 
    | Key | Example |
    |-----|---------|
@@ -103,9 +104,11 @@ See `f/.env.production.example` for the variable name. SPA routing is handled by
    | `GROQ_API_KEY` | Groq key (for AI) |
    | `FRONTEND_ORIGINS` | `https://your-site.netlify.app` (comma-separated if multiple) |
 
-   Do **not** set `HOST=127.0.0.1` or a fixed `PORT` on Render — the platform sets `PORT`; the app binds `0.0.0.0` automatically.
+   Do **not** set `HOST` or `PORT` on Render.
 
-6. After deploy, open `https://YOUR-RENDER-URL/api/health` — should return `{"ok":true,...}`.
+7. After deploy, logs should show `[bind 0.0.0.0:…]`, not `127.0.0.1:5000`. Open `https://YOUR-RENDER-URL/api/health`.
+
+See **`RENDER_FIX.md`** if deploy still fails.
 
 Push these config changes to GitHub, then redeploy both services.
 

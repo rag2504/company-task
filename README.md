@@ -1,235 +1,321 @@
-# 🏪 Provision Store - Billing & Stock Management System
+# 🚀 QuickBill AI – Smart Billing & Inventory Management System
 
-A comprehensive web-based solution for managing retail operations, designed specifically for provision stores and small businesses. This full-stack application enables efficient stock management, billing operations, and revenue tracking with role-based access control.
-
-## 🌟 Key Features
-
-### 👥 **User Management & Authentication**
-- **Owner Registration**: Secure signup process for store owners
-- **Staff Management**: Owners can add and manage staff members
-- **Role-Based Access**: Different permissions for owners and staff
-- **Secure Login**: Email/password authentication with session management
-- **Password Recovery**: Forgot password functionality
-
-### 📦 **Advanced Stock Management**
-- **Product Inventory**: Add, edit, and delete products with detailed information
-- **Category Management**: Organize products across multiple categories:
-  - Spices & Masalas, Rice/Dal/Grains, Bakery & Dairy
-  - Snacks & Biscuits, Packaged Foods, Edible Oils & Ghee
-  - Beverages, Personal Care, Household Items, and more
-- **Stock Tracking**: Monitor units, weight, and pricing
-- **Expiry Date Management**: Track product expiration dates
-- **Low Stock Alerts**: Automatic notifications for inventory management
-- **Expiry Notifications**: Alerts when products are nearing expiration
-
-### 🧾 **Comprehensive Billing System**
-- **Invoice Generation**: Create detailed bills for customers
-- **Customer Management**: Store customer information and purchase history
-- **Payment Tracking**: Multiple payment methods (Cash, Card, UPI, Credit)
-- **Bill Status Management**: Track paid, pending, and partial payments
-- **Print-Ready Bills**: Professional invoice formatting
-
-### 📊 **Business Analytics & Reports**
-- **Revenue Tracking**: Monitor daily, weekly, and monthly sales
-- **Product Performance**: Track best-selling items
-- **Customer Analytics**: View customer purchase patterns
-- **Stock Reports**: Inventory levels and movement analysis
-- **Financial Dashboard**: Real-time business metrics
-
-### 🎨 **Modern User Experience**
-- **Responsive Design**: Works seamlessly on desktop, tablet, and mobile
-- **Dark/Light Mode**: Toggle between themes for comfortable viewing
-- **Real-time Updates**: Live data synchronization
-- **Intuitive Interface**: Easy-to-use design with modern UI components
-- **Search & Filter**: Quick product and customer lookup
-
-## 🛠️ Tech Stack
-
-### **Frontend**
-- **React.js 18.3.1** - Modern UI framework
-- **Tailwind CSS** - Utility-first styling
-- **Lucide React** - Beautiful icons
-- **Responsive Design** - Mobile-first approach
-
-### **Backend**
-- **Node.js** - Server runtime
-- **Express.js 5.1.0** - Web framework
-- **MongoDB** - NoSQL database
-- **Mongoose 8.16.0** - MongoDB ODM
-
-### **Deployment & DevOps**
-- **Frontend**: Vercel (Production-ready deployment)
-- **Backend**: Render (Cloud hosting)
-- **Database**: MongoDB Atlas (Cloud database)
-- **Version Control**: Git with GitHub
-
-## 🚀 Quick Start
-
-### Prerequisites
-- Node.js (>= 18.0.0)
-- MongoDB Atlas account (or local MongoDB)
-- Git
-
-### Installation
-
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/your-username/billing-stock-management.git
-   cd billing-stock-management
-   ```
-
-2. **Backend Setup**
-   ```bash
-   cd backend
-   npm install
-   
-   # Create .env file with your MongoDB connection string
-   echo "MONGODB_URI=your_mongodb_connection_string" > .env
-   echo "PORT=5000" >> .env
-   
-   # Start the backend server
-   npm start
-   ```
-
-3. **Frontend Setup**
-   ```bash
-   cd ../f
-   npm install
-   
-   # Start the frontend development server
-   npm start
-   ```
-
-4. **Access the Application**
-   - Frontend: http://localhost:3000
-   - Backend API: http://localhost:5000
-
-## 🏗️ Project Structure
-
-```
-billing-stock-management/
-├── backend/                    # Express.js API server
-│   ├── server.js              # Main server file
-│   ├── package.json           # Backend dependencies
-│   └── .env                   # Environment variables
-├── f/                         # React frontend
-│   ├── src/
-│   │   ├── App.js            # Main application component
-│   │   ├── SignIn.js         # Authentication components
-│   │   ├── SignUp.js
-│   │   ├── StaffManagement.js
-│   │   └── utils/            # Utility functions
-│   ├── public/               # Static assets
-│   └── package.json          # Frontend dependencies
-├── vercel.json               # Frontend deployment config
-├── render.yaml               # Backend deployment config
-└── README.md                 # Project documentation
-```
-
-## 🔧 API Endpoints
-
-### **Products**
-- `GET /api/products` - Retrieve all products
-- `GET /api/products/:id` - Get single product
-- `POST /api/products` - Create new product
-- `PUT /api/products/:id` - Update product
-- `DELETE /api/products/:id` - Delete product
-
-### **Bills**
-- `GET /api/bills` - Retrieve all bills
-- `GET /api/bills/:id` - Get single bill
-- `POST /api/bills` - Create new bill
-- `PUT /api/bills/:id` - Update bill
-- `DELETE /api/bills/:id` - Delete bill
-
-### **Dashboard**
-- `GET /api/dashboard/stats` - Get business statistics
-
-## 👤 User Roles & Permissions
-
-### **Owner Access**
-- ✅ Full dashboard access
-- ✅ Product management (CRUD operations)
-- ✅ Staff management
-- ✅ Billing operations
-- ✅ Customer management
-- ✅ Revenue reports
-- ✅ Stock notifications
-
-### **Staff Access**
-- ✅ Dashboard viewing
-- ✅ Billing operations
-- ✅ Customer management
-- ❌ Product management
-- ❌ Staff management
-- ❌ Revenue reports
-
-## 🌐 Deployment
-
-### **Frontend (Vercel)**
-The frontend is configured for automatic deployment on Vercel:
-```json
-{
-  "buildCommand": "cd f && npm install && npm run build",
-  "outputDirectory": "f/build"
-}
-```
-
-### **Backend (Render)**
-The backend is deployed on Render with the following configuration:
-```yaml
-services:
-  - type: web
-    name: billing-stock-backend
-    env: node
-    buildCommand: cd backend && npm install
-    startCommand: cd backend && npm start
-```
-
-## 📱 Mobile Responsiveness
-
-The application is fully responsive and optimized for:
-- 📱 Mobile devices (320px+)
-- 💻 Tablets (768px+)
-- 🖥️ Desktop computers (1024px+)
-
-## 🔐 Security Features
-
-- **Input Validation**: Comprehensive data validation
-- **Secure Authentication**: Session-based user management
-- **CORS Protection**: Configured for specific origins
-- **Data Sanitization**: MongoDB injection protection
-- **Role-Based Access**: Permission-based feature access
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
-## 📝 License
-
-This project is licensed under the ISC License - see the [LICENSE](LICENSE) file for details.
-
-## 📞 Support
-
-For support and questions:
-- 📧 Email: your-email@example.com
-- 🐛 Issues: [GitHub Issues](https://github.com/your-username/billing-stock-management/issues)
-- 📚 Documentation: [Wiki](https://github.com/your-username/billing-stock-management/wiki)
-
-## 🙏 Acknowledgments
-
-- React team for the amazing framework
-- MongoDB team for the robust database
-- Vercel and Render for hosting services
-- Lucide React for beautiful icons
-- Tailwind CSS for the styling framework
+QuickBill AI is a modern AI-powered Billing, Inventory, and Business Analytics platform built to simplify retail and business management using intelligent automation, analytics, and AI-driven insights.
 
 ---
 
-**Made with ❤️ for small businesses and provision stores**
+# 🌐 Live Demo
 
-*Transform your retail operations with modern technology!*
+### Frontend
+
+https://quickbill-point.netlify.app/
+
+### Backend API
+
+https://company-task-5vh3.onrender.com/
+
+---
+
+# ✨ Features
+
+## 🔐 Authentication System
+
+* Secure JWT Authentication
+* Login & Registration
+* Protected Routes
+* Session Management
+
+---
+
+# 🧾 Smart Billing System
+
+* Create Bills & Invoices
+* Multiple Payment Methods
+* Pending / Paid / Partial Payments
+* Customer Billing History
+* Dynamic Cart Management
+* Real-Time Bill Calculation
+
+---
+
+# 📦 Inventory & Product Management
+
+* Add / Edit / Delete Products
+* Product Categories
+* Stock Quantity Management
+* Cost & Profit Tracking
+* Product Search & Filters
+* Inventory Monitoring
+
+---
+
+# 🤖 AI-Powered Features
+
+## 🧠 AI Business Assistant
+
+Integrated with Groq AI to provide intelligent business insights.
+
+### AI Capabilities:
+
+* Smart Product Search
+* AI Product Suggestions
+* Auto Product Descriptions
+* AI SEO Text Generation
+* AI Product Highlights
+* AI Summaries
+* AI Business Analytics
+
+---
+
+## 💬 AI Chatbot Assistant
+
+Users can ask business-related questions naturally.
+
+### Example Queries:
+
+* “How many Coca Cola bottles are left?”
+* “Show today’s sales”
+* “Which products are low in stock?”
+* “What should I restock?”
+* “Show pending payments”
+* “Generate sales summary”
+
+---
+
+## 📊 Smart AI Dashboard
+
+Advanced analytics dashboard with:
+
+* Total Revenue
+* Daily/Weekly/Monthly Sales
+* Profit Analysis
+* Top Selling Products
+* Low Stock Alerts
+* Fast Moving Products
+* Slow Moving Products
+* Pending Payments
+* Business Insights
+
+---
+
+## 🔔 AI Notification System
+
+Smart notifications for:
+
+* Low Stock Alerts
+* Restocking Suggestions
+* Sales Trends
+* Revenue Milestones
+* Inventory Warnings
+
+---
+
+## 📈 AI Analytics & Predictions
+
+* Sales Trend Analysis
+* Product Demand Prediction
+* Restocking Recommendations
+* AI Sales Summaries
+* Inventory Forecasting
+
+---
+
+# 📑 Reports & Export
+
+* Daily Reports
+* Weekly Reports
+* Monthly Reports
+* Product Reports
+* Sales Reports
+* Profit/Loss Reports
+
+### Export Support:
+
+* PDF Export
+* Excel Export
+* CSV Export
+* Print Support
+
+---
+
+# 🎨 Modern UI/UX
+
+* Fully Responsive Design
+* Professional Dashboard
+* Smooth Animations
+* Interactive Charts
+* Clean Admin Panel
+* Dark/Light Theme Ready
+
+---
+
+# 🛠️ Tech Stack
+
+## Frontend
+
+* React.js
+* Tailwind CSS
+* Axios
+* Framer Motion
+* Recharts
+
+## Backend
+
+* Node.js
+* Express.js
+* MongoDB
+* Mongoose
+* JWT Authentication
+
+## AI Integration
+
+* Groq API
+* AI Analytics Engine
+* AI Chatbot System
+
+---
+
+# 📂 Project Structure
+
+```bash
+QuickBill-AI/
+│
+├── frontend/
+│   ├── src/
+│   ├── components/
+│   ├── pages/
+│   ├── services/
+│   └── utils/
+│
+├── backend/
+│   ├── controllers/
+│   ├── routes/
+│   ├── models/
+│   ├── middleware/
+│   ├── services/
+│   └── utils/
+│
+└── README.md
+```
+
+---
+
+# ⚙️ Environment Variables
+
+## Backend `.env`
+
+```env
+PORT=5000
+MONGO_URI=your_mongodb_uri
+JWT_SECRET=your_secret_key
+GROQ_API_KEY=your_groq_api_key
+```
+
+---
+
+# 🚀 Installation & Setup
+
+## Clone Repository
+
+```bash
+git clone <your_repo_url>
+```
+
+---
+
+## Backend Setup
+
+```bash
+cd backend
+npm install
+npm run dev
+```
+
+---
+
+## Frontend Setup
+
+```bash
+cd frontend
+npm install
+npm start
+```
+
+---
+
+# 📡 API Features
+
+## Authentication
+
+* Register User
+* Login User
+* JWT Verification
+
+## Products
+
+* Add Product
+* Update Product
+* Delete Product
+* Product Search
+
+## Billing
+
+* Create Bill
+* Get Bills
+* Sales Analytics
+
+## AI APIs
+
+* AI Chatbot
+* AI Product Description
+* AI Analytics
+* AI Notifications
+
+---
+
+# 🔒 Security Features
+
+* JWT Authentication
+* Protected APIs
+* Environment Variables
+* Input Validation
+* Error Handling
+* Secure API Architecture
+
+---
+
+# 📊 Future Enhancements
+
+* Voice-to-Billing
+* Multi-Store Management
+* Barcode Scanner
+* GST Automation
+* AI Forecast Engine
+* WhatsApp Invoice Sharing
+* Mobile App Version
+
+---
+
+# 👨‍💻 Developer
+
+### Rag Raichura
+
+Full Stack Developer
+
+Passionate about building scalable AI-powered web applications and modern business solutions.
+
+---
+
+# ⭐ Support
+
+If you like this project:
+
+* Give it a ⭐ on GitHub
+* Share feedback
+* Contribute to improvements
+
+---
+
+# 📜 License
+
+This project is developed for educational and portfolio purposes.

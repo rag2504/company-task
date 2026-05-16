@@ -1,5 +1,74 @@
 import React from 'react';
 
+const printBill = (bill) => {
+  const itemRows = (bill.items || []).map((item, i) => `
+    <tr>
+      <td>${i + 1}</td>
+      <td>${item.productName}</td>
+      <td style="text-align:center">${item.quantity}</td>
+      <td style="text-align:right">&#8377;${item.unitPrice}</td>
+      <td style="text-align:right">&#8377;${item.totalPrice}</td>
+    </tr>
+  `).join('');
+
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>Bill #${bill.billNumber}</title>
+      <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; font-size: 13px; color: #111; padding: 24px; max-width: 600px; margin: auto; }
+        h1 { font-size: 22px; text-align: center; margin-bottom: 4px; }
+        .subtitle { text-align: center; color: #555; margin-bottom: 16px; font-size: 12px; }
+        .divider { border-top: 1px dashed #aaa; margin: 12px 0; }
+        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 16px; margin-bottom: 12px; }
+        .info-grid span { font-weight: bold; }
+        table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+        th { background: #f3f3f3; padding: 6px 8px; text-align: left; font-size: 12px; border-bottom: 1px solid #ddd; }
+        td { padding: 6px 8px; border-bottom: 1px solid #eee; }
+        .total-row { font-size: 15px; font-weight: bold; text-align: right; margin-top: 12px; }
+        .footer { text-align: center; margin-top: 20px; font-size: 12px; color: #666; }
+        .badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: bold;
+          background: ${bill.paymentStatus === 'paid' ? '#d1fae5' : bill.paymentStatus === 'partial' ? '#fef9c3' : '#fee2e2'};
+          color: ${bill.paymentStatus === 'paid' ? '#065f46' : bill.paymentStatus === 'partial' ? '#92400e' : '#991b1b'};
+        }
+      </style>
+    </head>
+    <body>
+      <h1>BILL RECEIPT</h1>
+      <p class="subtitle">Bill #${bill.billNumber} &nbsp;|&nbsp; ${new Date(bill.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</p>
+      <div class="divider"></div>
+      <div class="info-grid">
+        <div>Customer: <span>${bill.customerName}</span></div>
+        ${bill.customerPhone ? `<div>Phone: <span>${bill.customerPhone}</span></div>` : ''}
+        <div>Payment: <span style="text-transform:capitalize">${bill.paymentMethod || 'Cash'}</span></div>
+        <div>Status: <span class="badge">${bill.paymentStatus.toUpperCase()}</span></div>
+      </div>
+      <div class="divider"></div>
+      <table>
+        <thead>
+          <tr>
+            <th>#</th><th>Product</th><th style="text-align:center">Qty</th><th style="text-align:right">Unit Price</th><th style="text-align:right">Total</th>
+          </tr>
+        </thead>
+        <tbody>${itemRows}</tbody>
+      </table>
+      <div class="divider"></div>
+      <div class="total-row">Total Amount: &#8377;${bill.totalAmount}</div>
+      <div class="footer">Thank you for shopping with us! Please visit again.</div>
+    </body>
+    </html>
+  `;
+
+  const win = window.open('', '_blank', 'width=700,height=600');
+  win.document.write(html);
+  win.document.close();
+  win.focus();
+  win.print();
+  win.close();
+};
+
 const getWhatsAppLink = (bill) => {
   if (!bill.customerPhone) return '#';
   
@@ -177,6 +246,15 @@ const ViewBillModal = ({ bill, onClose }) => {
         {/* Footer Actions */}
         <div className="sticky bottom-0 bg-white border-t border-gray-200 px-6 py-4 rounded-b-lg">
           <div className="flex justify-end space-x-3">
+            <button
+              onClick={() => printBill(bill)}
+              className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors duration-200 font-medium"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M6 14h12v8H6v-8z" />
+              </svg>
+              Print Bill
+            </button>
             {bill.customerPhone && (
               <a
                 href={getWhatsAppLink(bill)}

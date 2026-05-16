@@ -70,20 +70,22 @@ You signed in with **offline / localStorage** mode (no JWT). Sign **out**, start
 
 Set **`GROQ_API_KEY`** in `backend/.env` and restart the backend.
 
-## Deploy (Vercel + Render)
+## Deploy (Netlify + Render)
 
-### Vercel (frontend in `f/`)
+### Netlify (frontend)
 
-1. Import the GitHub repo on [Vercel](https://vercel.com).
-2. Set **Root Directory** to `f`.
-3. Leave **Build Command**, **Install Command**, and **Output Directory** on **defaults** (do not use `cd f && …` — you are already inside `f`).
-   - Install: `npm install`
-   - Build: `npm run build`
-   - Output: `build`
-4. Environment variable:
-   - `REACT_APP_API_URL` = your Render URL, e.g. `https://company-task-5vh3.onrender.com` (no trailing slash).
+The repo includes **`netlify.toml`** at the root — Netlify picks it up when you import the GitHub repo.
 
-If **Root Directory** is empty (repo root), the root `vercel.json` uses `npm install --prefix f` instead.
+1. Go to [app.netlify.com](https://app.netlify.com) → **Add new site** → **Import an existing project** → **GitHub** → select your repo.
+2. On the build settings screen, confirm (should match `netlify.toml` automatically):
+   - **Base directory**: `f`
+   - **Build command**: `npm run build`
+   - **Publish directory**: `f/build` (or `build` if Netlify shows paths relative to base — both mean the same)
+3. **Site configuration** → **Environment variables** → add:
+   - `REACT_APP_API_URL` = your Render backend URL, e.g. `https://company-task-5vh3.onrender.com` (no trailing slash)
+4. **Deploy site**. When it finishes, copy your site URL (e.g. `https://something.netlify.app`).
+
+See `f/.env.production.example` for the variable name. SPA routing is handled by `netlify.toml` and `f/public/_redirects`.
 
 ### Render (backend in `backend/`)
 
@@ -99,7 +101,7 @@ If **Root Directory** is empty (repo root), the root `vercel.json` uses `npm ins
    | `MONGODB_URI` | Atlas connection string |
    | `JWT_SECRET` | long random string |
    | `GROQ_API_KEY` | Groq key (for AI) |
-   | `FRONTEND_ORIGINS` | `https://your-app.vercel.app` (comma-separated if multiple) |
+   | `FRONTEND_ORIGINS` | `https://your-site.netlify.app` (comma-separated if multiple) |
 
    Do **not** set `HOST=127.0.0.1` or a fixed `PORT` on Render — the platform sets `PORT`; the app binds `0.0.0.0` automatically.
 

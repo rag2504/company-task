@@ -1,0 +1,17 @@
+# Netlify — frontend (Create React App in f/)
+# https://app.netlify.com → Add new site → Import from Git → pick this repo.
+# Netlify reads this file automatically; you usually do not need to change build settings in the UI.
+
+[build]
+  base = "f"
+  command = "npm run build"
+  publish = "build"
+
+[build.environment]
+  NODE_VERSION = "20"
+
+# React Router / client-side routes
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

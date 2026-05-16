@@ -9,6 +9,7 @@ import {
   getUserStats,
 } from './userManager';
 import { api, apiEnabled } from '../services/client';
+import { validateBillStock } from './stockUtils';
 
 const API_DELAY = 300;
 const simulateDelay = (ms = API_DELAY) =>
@@ -214,14 +215,23 @@ export const billsApi = {
       updatedAt: new Date().toISOString(),
     };
     if (billData.items && billData.items.length > 0) {
+      const stockCheck = validateBillStock(products, billData.items);
+      if (!stockCheck.ok) {
+        throw new Error(stockCheck.message);
+      }
+
+      const qtyByProduct = new Map();
+      for (const item of billData.items) {
+        const pid = String(item.productId);
+        qtyByProduct.set(pid, (qtyByProduct.get(pid) || 0) + Number(item.quantity));
+      }
+
       const updatedProducts = products.map((product) => {
-        const billItem = billData.items.find(
-          (item) => String(item.productId) === String(product.id)
-        );
-        if (billItem) {
+        const deduct = qtyByProduct.get(String(product.id));
+        if (deduct) {
           return {
             ...product,
-            units: Math.max(0, (product.units || 0) - billItem.quantity),
+            units: (product.units || 0) - deduct,
           };
         }
         return product;

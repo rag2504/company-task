@@ -1,10 +1,19 @@
 import axios from 'axios';
 import { getAuthToken } from '../utils/userManager';
 
-const base = (process.env.REACT_APP_API_URL || '').replace(/\/$/, '');
+function resolveApiBase() {
+  const fromEnv = (process.env.REACT_APP_API_URL || '').replace(/\/$/, '');
+  if (fromEnv) return fromEnv;
+  if (process.env.NODE_ENV === 'development') {
+    return 'http://localhost:5000';
+  }
+  return '';
+}
+
+const apiBase = resolveApiBase();
 
 export const api = axios.create({
-  baseURL: base ? `${base}/api` : '/api',
+  baseURL: apiBase ? `${apiBase}/api` : '/api',
   timeout: 60000,
 });
 
@@ -16,7 +25,17 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-/** True when the user has a JWT — data + AI calls should use the backend */
+export function getApiBaseUrl() {
+  return apiBase;
+}
+
 export function apiEnabled() {
   return Boolean(getAuthToken());
+}
+
+/** Ping local/production API without auth */
+export async function checkApiHealth() {
+  const base = apiBase || 'http://localhost:5000';
+  const res = await axios.get(`${base}/api/health`, { timeout: 5000 });
+  return res.data;
 }

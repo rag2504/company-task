@@ -76,12 +76,15 @@ export default function AIDashboard({ darkMode }) {
         if (!cancelled) {
           const status = e.response?.status;
           let msg = e.response?.data?.message || e.message;
-          if (status === 404) {
+          if (!e.response && e.request) {
             msg =
-              'Could not reach Quickbill API routes (404). Start the backend on port 5000 and restart `npm start` so requests hit Express — see QUICKBILL_SETUP.md.';
+              'Network Error — start the backend: cd backend && npm run dev (http://localhost:5000), then restart the React app.';
+          } else if (status === 404) {
+            msg =
+              'Could not reach Quickbill API routes (404). Start the backend on port 5000 and restart `npm start`.';
           } else if (status === 401) {
             msg =
-              'AI requires a server login. Sign out, ensure the backend is running, then sign in again (same email/password as MongoDB user).';
+              'AI requires a server login. Sign out, ensure the backend is running, then sign in again (MongoDB user, e.g. demo@quickbill.app after npm run seed).';
           }
           setErr(msg);
         }

@@ -608,16 +608,59 @@ export const updateUserStats = (userId) => {
 // Staff Management Functions
 
 // Create staff member (only by Owner)
-export const createStaffMember = (ownerUserId, staffData) => {
+export const createStaffMember = (ownerUserId, staffData, ownerRole) => {
   const { name, email, password } = staffData;
   
-  // Verify the creator is an Owner
-  const owner = getAllUsers().find(u => u.id === ownerUserId && u.role === USER_ROLES.OWNER);
-  if (!owner) {
+  // Verify the creator is an Owner — check localStorage first, then trust ownerRole if provided
+  const users = getAllUsers();
+  const owner = users.find(u => u.id === ownerUserId && u.role === USER_ROLES.OWNER);
+  
+  if (!owner && ownerRole !== USER_ROLES.OWNER) {
     return { success: false, message: 'Only Owners can create staff members' };
   }
+
+  // If owner is a remote user (not in localStorage), create staff entry directly
+  if (!owner) {
+    if (!validateEmail(email)) {
+      return { success: false, message: 'Invalid email format' };
+    }
+    const passwordValidation = validatePassword(password);
+    if (!passwordValidation.isValid) {
+      return { success: false, message: passwordValidation.message };
+    }
+    if (!name || name.trim().length < 2) {
+      return { success: false, message: 'Name must be at least 2 characters long' };
+    }
+    if (emailExists(email)) {
+      return { success: false, message: 'Email already registered' };
+    }
+
+    // Use ownerUserId as organizationId for remote owners (string id)
+    const newUser = {
+      id: getNextUserId(),
+      email: email.toLowerCase().trim(),
+      password: password,
+      name: name.trim(),
+      role: USER_ROLES.STAFF,
+      organizationId: ownerUserId,
+      ownerId: ownerUserId,
+      createdAt: new Date().toISOString(),
+      lastLogin: null,
+      isActive: true
+    };
+
+    users.push(newUser);
+    if (saveUsers(users)) {
+      setUserData(newUser.id, DATA_TYPES.BILLS, []);
+      setUserData(newUser.id, DATA_TYPES.STATS, {
+        totalProducts: 0, totalBills: 0, totalRevenue: 0, lowStockProducts: 0
+      });
+      return { success: true, message: 'Staff member created successfully', user: { ...newUser, password: undefined } };
+    }
+    return { success: false, message: 'Failed to save staff member' };
+  }
   
-  // Create staff member under this owner
+  // Create staff member under this owner (local user)
   return registerUser({
     name,
     email,
@@ -633,7 +676,12 @@ export const getOwnerStaff = (ownerUserId) => {
   const owner = users.find(u => u.id === ownerUserId && u.role === USER_ROLES.OWNER);
   
   if (!owner) {
-    return [];
+    // Remote owner: match by ownerId string
+    return users.filter(u => 
+      u.role === USER_ROLES.STAFF && 
+      u.ownerId === ownerUserId &&
+      u.isActive
+    );
   }
   
   // Return all staff members in the same organization
@@ -650,16 +698,18 @@ export const removeStaffMember = (ownerUserId, staffUserId) => {
   const owner = users.find(u => u.id === ownerUserId && u.role === USER_ROLES.OWNER);
   const staffMember = users.find(u => u.id === staffUserId && u.role === USER_ROLES.STAFF);
   
-  if (!owner) {
-    return { success: false, message: 'Only Owners can remove staff members' };
-  }
+  // Allow remote owners (not in localStorage) to remove their staff
+  const isRemoteOwner = !owner;
   
   if (!staffMember) {
     return { success: false, message: 'Staff member not found' };
   }
   
-  // Verify the staff member belongs to this owner's organization
-  if (staffMember.organizationId !== owner.organizationId) {
+  // Verify the staff member belongs to this owner
+  if (!isRemoteOwner && staffMember.organizationId !== owner.organizationId) {
+    return { success: false, message: 'You can only remove staff from your organization' };
+  }
+  if (isRemoteOwner && staffMember.ownerId !== ownerUserId) {
     return { success: false, message: 'You can only remove staff from your organization' };
   }
   
@@ -683,16 +733,17 @@ export const updateStaffMember = (ownerUserId, staffUserId, updates) => {
   const owner = users.find(u => u.id === ownerUserId && u.role === USER_ROLES.OWNER);
   const staffMember = users.find(u => u.id === staffUserId && u.role === USER_ROLES.STAFF);
   
-  if (!owner) {
-    return { success: false, message: 'Only Owners can update staff members' };
-  }
+  const isRemoteOwner = !owner;
   
   if (!staffMember) {
     return { success: false, message: 'Staff member not found' };
   }
   
-  // Verify the staff member belongs to this owner's organization
-  if (staffMember.organizationId !== owner.organizationId) {
+  // Verify the staff member belongs to this owner
+  if (!isRemoteOwner && staffMember.organizationId !== owner.organizationId) {
+    return { success: false, message: 'You can only update staff from your organization' };
+  }
+  if (isRemoteOwner && staffMember.ownerId !== ownerUserId) {
     return { success: false, message: 'You can only update staff from your organization' };
   }
   
@@ -723,16 +774,18 @@ export const getOrganizationStats = (ownerUserId) => {
   const users = getAllUsers();
   const owner = users.find(u => u.id === ownerUserId && u.role === USER_ROLES.OWNER);
   
+  let organizationUsers;
   if (!owner) {
-    return null;
+    // Remote owner: match staff by ownerId
+    organizationUsers = users.filter(u => u.ownerId === ownerUserId || u.id === ownerUserId);
+  } else {
+    organizationUsers = users.filter(u => u.organizationId === owner.organizationId);
   }
-  
-  const organizationUsers = users.filter(u => u.organizationId === owner.organizationId);
   
   return {
     totalStaff: organizationUsers.filter(u => u.role === USER_ROLES.STAFF && u.isActive).length,
     inactiveStaff: organizationUsers.filter(u => u.role === USER_ROLES.STAFF && !u.isActive).length,
-    organizationId: owner.organizationId,
-    createdAt: owner.createdAt
+    organizationId: owner ? owner.organizationId : ownerUserId,
+    createdAt: owner ? owner.createdAt : new Date().toISOString()
   };
 };

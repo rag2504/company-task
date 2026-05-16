@@ -34,6 +34,10 @@ app.use(express.json({ limit: '1mb' }));
 app.use(globalLimiter);
 app.use(morgan(env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 
+app.get('/api/health', (req, res) => {
+  res.json({ ok: true, service: 'quickbill-api', time: new Date().toISOString() });
+});
+
 app.get('/', (req, res) => {
   res.json({
     message: 'Quickbill — AI Point of Sale API',

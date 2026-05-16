@@ -120,7 +120,7 @@ const StaffManagement = ({ currentUser, darkMode }) => {
           name: formData.name,
           email: formData.email,
           password: formData.password
-        });
+        }, currentUser.role);
 
         if (result.success) {
           loadStaffData();

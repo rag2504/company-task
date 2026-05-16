@@ -30,7 +30,8 @@ import {
   getUserStats, updateUserStats
 } from './utils/userManager';
 import { productsApi, billsApi, statsApi } from './utils/mockApi';
-import { api } from './services/client';
+import { api, checkApiHealth } from './services/client';
+import { getAvailableUnits, validateBillStock } from './utils/stockUtils';
 import AIDashboard from './components/ai/AIDashboard';
 import AIChatPanel from './components/ai/AIChatPanel';
 import StockPredictionPanel from './components/ai/StockPredictionPanel';
@@ -215,6 +216,27 @@ const App = () => {
       fetchStats();
     }
   }, [isAuthenticated, currentUser?.id, fetchProducts, fetchBills, fetchStats]);
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    if (getAuthToken()) return;
+
+    checkApiHealth()
+      .then(() => {
+        setToast({
+          message:
+            'API is online but you are in offline mode. Sign out and sign in again (use your MongoDB account) for stock sync & AI.',
+          type: 'error',
+        });
+      })
+      .catch(() => {
+        setToast({
+          message:
+            'Backend not reachable at http://localhost:5000 — run "npm run dev" in the backend folder.',
+          type: 'error',
+        });
+      });
+  }, [isAuthenticated]);
 
   // Event listener for viewing bills from customer section
   useEffect(() => {
@@ -463,6 +485,8 @@ const App = () => {
             products={products}
             updateUserBills={updateUserBills}
             fetchBills={fetchBills}
+            fetchProducts={fetchProducts}
+            fetchStats={fetchStats}
             currentUser={currentUser}
           />
         )}
@@ -1904,7 +1928,15 @@ const ProductForm = ({ product, onClose, onSave }) => {
 };
 
 // Billing Section Component
-const BillingSection = ({ bills, setBills, products, fetchBills, currentUser }) => {
+const BillingSection = ({
+  bills,
+  setBills,
+  products,
+  fetchBills,
+  fetchProducts,
+  fetchStats,
+  currentUser,
+}) => {
   const [showForm, setShowForm] = useState(false);
   const [editingBill, setEditingBill] = useState(null);
   const [viewingBill, setViewingBill] = useState(null);
@@ -1956,7 +1988,9 @@ const BillingSection = ({ bills, setBills, products, fetchBills, currentUser }) 
       setIsLoading(true);
       try {
         await billsApi.delete(id);
-        fetchBills();
+        await fetchBills();
+        await fetchProducts();
+        if (fetchStats) await fetchStats();
       } catch (error) {
         console.error('Error deleting bill:', error);
         alert('Error deleting bill. Please try again.');
@@ -2351,10 +2385,10 @@ const BillingSection = ({ bills, setBills, products, fetchBills, currentUser }) 
             setShowForm(false);
             setEditingBill(null);
           }}
-          onSave={() => {
-            console.log('onSave callback called, refreshing bills...');
-            fetchBills();
-            console.log('Bills refreshed, closing form...');
+          onSave={async () => {
+            await fetchBills();
+            await fetchProducts();
+            if (fetchStats) await fetchStats();
             setShowForm(false);
             setEditingBill(null);
           }}
@@ -2388,6 +2422,17 @@ const BillForm = ({ bill, products, bills, onClose, onSave }) => {
   const [customerType, setCustomerType] = useState(bill?.customerName && bill?.customerPhone ? 'existing' : 'new');
   const [step, setStep] = useState(1);
   const [validationErrors, setValidationErrors] = useState({});
+  const [paymentStepReady, setPaymentStepReady] = useState(false);
+
+  useEffect(() => {
+    if (step !== 3) {
+      setPaymentStepReady(false);
+      return undefined;
+    }
+    setPaymentStepReady(false);
+    const timer = setTimeout(() => setPaymentStepReady(true), 350);
+    return () => clearTimeout(timer);
+  }, [step]);
 
   // Get unique customers from existing bills
   const existingCustomers = React.useMemo(() => {
@@ -2459,8 +2504,13 @@ const BillForm = ({ bill, products, bills, onClose, onSave }) => {
     // Items validation (this is required)
     if (!formData.items || formData.items.length === 0) {
       errors.items = 'At least one item is required';
+    } else {
+      const stockCheck = validateBillStock(products, formData.items);
+      if (!stockCheck.ok) {
+        errors.items = stockCheck.message;
+      }
     }
-    
+
     setFormErrors({ ...errors, ...warnings });
     // Only return false for actual errors, not warnings
     return Object.keys(errors).length === 0;
@@ -2468,25 +2518,46 @@ const BillForm = ({ bill, products, bills, onClose, onSave }) => {
 
   const addItem = () => {
     if (!newItem.productId) return;
-    
-    const product = products.find(p => p.id === newItem.productId);
+
+    const product = products.find(
+      (p) => String(p.id) === String(newItem.productId)
+    );
     if (!product) return;
+
+    const qty = Number(newItem.quantity);
+    if (!qty || qty < 1) {
+      setFormErrors({ ...formErrors, items: 'Quantity must be at least 1.' });
+      return;
+    }
+
+    const available = getAvailableUnits(
+      products,
+      product.id,
+      formData.items
+    );
+    if (qty > available) {
+      setFormErrors({
+        ...formErrors,
+        items: `Only ${available} unit(s) of "${product.name}" available (you entered ${qty}).`,
+      });
+      return;
+    }
 
     const item = {
       productId: product.id,
       productName: product.name,
-      quantity: newItem.quantity,
+      quantity: qty,
       unitPrice: Number(product.price),
-      totalPrice: Number(product.price) * newItem.quantity
+      totalPrice: Number(product.price) * qty,
     };
 
     setFormData({
       ...formData,
-      items: [...formData.items, item]
+      items: [...formData.items, item],
     });
 
     setNewItem({ productId: '', quantity: 1 });
-    setFormErrors({ ...formErrors, items: null }); // Clear items error
+    setFormErrors({ ...formErrors, items: null });
   };
 
   const removeItem = (index) => {
@@ -2498,18 +2569,22 @@ const BillForm = ({ bill, products, bills, onClose, onSave }) => {
 
   const totalAmount = formData.items.reduce((sum, item) => sum + item.totalPrice, 0);
 
+  const goToStep = (next) => {
+    if (next === 3) setPaymentStepReady(false);
+    setStep(next);
+  };
+
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    console.log('Form submitted!', { formData, step, submitting, currentStep: step });
-    
-    // CRITICAL: Make sure we're on step 3 before allowing submission
+    if (e?.preventDefault) e.preventDefault();
+
     if (step !== 3) {
-      console.log('BLOCKING: Form submitted but not on step 3. Current step:', step, 'SUBMISSION BLOCKED');
-      alert('Please complete all steps before submitting. Currently on step ' + step + ', need to reach step 3.');
-      return false;
+      return;
     }
-    
-    // Prevent double submission
+
+    if (!paymentStepReady) {
+      return;
+    }
+
     if (submitting) {
       console.log('Already submitting, ignoring duplicate submission');
       return;
@@ -2562,12 +2637,7 @@ const BillForm = ({ bill, products, bills, onClose, onSave }) => {
       
       console.log('Bill creation successful! Calling callbacks...');
       
-      // Show success message
-      alert('✅ Bill created successfully!');
-      
-      console.log('Calling onSave callback...');
-      onSave();
-      console.log('Calling onClose callback...');
+      await onSave();
       onClose();
     } catch (error) {
       console.error('Error creating/updating bill:', error);
@@ -2577,7 +2647,11 @@ const BillForm = ({ bill, products, bills, onClose, onSave }) => {
         formData,
         totalAmount
       });
-      setBackendError(`Error: ${error.message || 'Network error. Please try again.'}`);
+      const msg =
+        error.response?.data?.message ||
+        error.message ||
+        'Network error. Start backend with: cd backend && npm run dev';
+      setBackendError(msg);
     } finally {
       setSubmitting(false);
     }
@@ -2599,11 +2673,12 @@ const BillForm = ({ bill, products, bills, onClose, onSave }) => {
     if (currentStep === 1) {
       if (formData.items.length === 0) {
         errors.items = 'Please add at least one item to your bill before continuing. Use the "Add New Item" section above to select products.';
+      } else {
+        const stockCheck = validateBillStock(products, formData.items);
+        if (!stockCheck.ok) errors.items = stockCheck.message;
       }
     }
-    
-    // Step 2 and 3 have no blocking validation - customer info is optional, payment defaults are fine
-    
+
     console.log('Validation errors:', errors);
     setValidationErrors(errors);
     return Object.keys(errors).length === 0;
@@ -2613,18 +2688,14 @@ const BillForm = ({ bill, products, bills, onClose, onSave }) => {
   const handleNextStep = () => {
     console.log('handleNextStep called, current step:', step);
     if (validateStep(step)) {
-      const nextStep = step + 1;
-      console.log('Moving to next step:', nextStep);
-      setStep(nextStep);
+      goToStep(step + 1);
     } else {
       console.log('Step validation failed, staying on step:', step);
     }
   };
 
   const handlePrevStep = () => {
-    const prevStep = step - 1;
-    console.log('Moving to previous step:', prevStep);
-    setStep(prevStep);
+    goToStep(step - 1);
   };
 
   const getStepIcon = (stepNum) => {
@@ -2706,13 +2777,10 @@ const BillForm = ({ bill, products, bills, onClose, onSave }) => {
             </div>
           )}
           <form 
-            onSubmit={handleSubmit} 
+            onSubmit={(e) => e.preventDefault()} 
             onKeyDown={(e) => {
-              // Prevent Enter key from submitting the form unless we're on step 3
-              if (e.key === 'Enter' && step !== 3) {
+              if (e.key === 'Enter') {
                 e.preventDefault();
-                console.log('Enter key pressed but not on step 3, preventing form submission');
-                return false;
               }
             }}
             className="space-y-6"
@@ -2766,8 +2834,22 @@ const BillForm = ({ bill, products, bills, onClose, onSave }) => {
                         <input
                           type="number"
                           min="1"
+                          max={
+                            newItem.productId
+                              ? getAvailableUnits(
+                                  products,
+                                  newItem.productId,
+                                  formData.items
+                                ) || 1
+                              : undefined
+                          }
                           value={newItem.quantity}
-                          onChange={(e) => setNewItem({ ...newItem, quantity: parseInt(e.target.value) || 1 })}
+                          onChange={(e) =>
+                            setNewItem({
+                              ...newItem,
+                              quantity: parseInt(e.target.value, 10) || 1,
+                            })
+                          }
                           className="flex-1 px-4 py-4 border-2 border-gray-300 rounded-l-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 hover:border-gray-400 text-base"
                           placeholder="1"
                         />
@@ -2783,10 +2865,10 @@ const BillForm = ({ bill, products, bills, onClose, onSave }) => {
                       </div>
                     </div>
                   </div>
-                  {validationErrors.items && (
+                  {(formErrors.items || validationErrors.items) && (
                     <p className="mt-3 text-sm text-red-600 flex items-center space-x-1">
                       <AlertTriangle className="h-4 w-4" />
-                      <span>{validationErrors.items}</span>
+                      <span>{formErrors.items || validationErrors.items}</span>
                     </p>
                   )}
                 </div>
@@ -3069,8 +3151,7 @@ const BillForm = ({ bill, products, bills, onClose, onSave }) => {
                     onClick={() => {
                       console.log('Skip button clicked, current step:', step);
                       setFormData({ ...formData, customerName: 'Walk-in Customer', customerPhone: '' });
-                      console.log('Setting step to 3 directly');
-                      setStep(3);
+                      goToStep(3);
                     }}
                     className="text-gray-500 hover:text-gray-700 underline transition-colors duration-200"
                   >
@@ -3214,17 +3295,13 @@ const BillForm = ({ bill, products, bills, onClose, onSave }) => {
                 {step < 3 ? (
                   <button
                     type="button"
-                    onClick={() => {
-                      console.log('Next button clicked, current step:', step);
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
                       if (step === 1) {
-                        // From step 1 to step 2
-                        if (validateStep(step)) {
-                          setStep(2);
-                        }
+                        if (validateStep(step)) goToStep(2);
                       } else if (step === 2) {
-                        // From step 2 to step 3 - always allow this
-                        console.log('Moving from step 2 to step 3');
-                        setStep(3);
+                        setTimeout(() => goToStep(3), 0);
                       }
                     }}
                     disabled={step === 1 && formData.items.length === 0}
@@ -3243,14 +3320,19 @@ const BillForm = ({ bill, products, bills, onClose, onSave }) => {
                   </button>
                 ) : (
                   <button
-                    type="submit"
+                    type="button"
+                    onClick={handleSubmit}
                     className="px-8 py-3 bg-gradient-to-r from-green-500 to-teal-500 text-white rounded-xl hover:from-green-600 hover:to-teal-600 disabled:opacity-50 transition-all duration-200 hover:scale-105 font-medium shadow-lg hover:shadow-xl"
-                    disabled={submitting}
+                    disabled={submitting || !paymentStepReady}
                   >
                     {submitting ? (
                       <div className="flex items-center space-x-2">
                         <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                         <span>Creating Bill...</span>
+                      </div>
+                    ) : !paymentStepReady ? (
+                      <div className="flex items-center space-x-2">
+                        <span>Review payment options…</span>
                       </div>
                     ) : (
                       <div className="flex items-center space-x-2">

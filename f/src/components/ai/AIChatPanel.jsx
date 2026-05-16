@@ -54,7 +54,11 @@ export default function AIChatPanel({ darkMode }) {
       const { data } = await api.post('/ai/chat', { message: trimmed });
       pushAssistant(data.reply);
     } catch (e) {
-      pushAssistant(e.response?.data?.message || e.message || 'Chat failed.');
+      const msg =
+        !e.response && e.request
+          ? 'Network Error — run backend: cd backend && npm run dev, then sign in again with your API account.'
+          : e.response?.data?.message || e.message || 'Chat failed.';
+      pushAssistant(msg);
     } finally {
       setLoading(false);
     }

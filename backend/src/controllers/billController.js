@@ -40,7 +40,10 @@ async function decrementStockForItems(userId, items) {
         throw new AppError(`Product ${item.productId} not found`, 400);
       }
       if (prod.units < item.quantity) {
-        throw new AppError(`Insufficient stock for ${prod.name}`, 400);
+        throw new AppError(
+          `Insufficient stock for "${prod.name}". Available: ${prod.units}, requested: ${item.quantity}.`,
+          400
+        );
       }
       prod.units -= item.quantity;
       await prod.save({ session });
@@ -70,6 +73,22 @@ export async function getBill(req) {
   return b;
 }
 
+function aggregateItems(items) {
+  const map = new Map();
+  for (const item of items) {
+    const pid = String(item.productId);
+    const qty = Number(item.quantity);
+    if (!pid || !Number.isFinite(qty) || qty < 1) {
+      throw new AppError('Each line item needs a valid product and quantity', 400);
+    }
+    map.set(pid, (map.get(pid) || 0) + qty);
+  }
+  return [...map.entries()].map(([productId, quantity]) => ({
+    productId,
+    quantity,
+  }));
+}
+
 export async function createBill(req) {
   const body = req.body;
   const items = body.items || [];
@@ -77,7 +96,8 @@ export async function createBill(req) {
     throw new AppError('Bill needs at least one line item', 400);
   }
 
-  await decrementStockForItems(uid(req), items);
+  const aggregated = aggregateItems(items);
+  await decrementStockForItems(uid(req), aggregated);
 
   const billNumber = `BILL-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
   const bill = await Bill.create({

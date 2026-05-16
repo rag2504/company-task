@@ -1,12 +1,10 @@
 import {
   getCurrentUser,
-  getAuthToken,
   getUserProducts,
   setUserProducts,
   getUserBills,
   setUserBills,
   updateUserStats,
-  getUserStats,
 } from './userManager';
 import { api, apiEnabled } from '../services/client';
 import { validateBillStock } from './stockUtils';

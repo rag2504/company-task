@@ -26,8 +26,7 @@ import ForgotPassword from './ForgotPassword';
 import StaffManagement from './StaffManagement';
 import { 
   getCurrentUser, signOutUser, USER_ROLES, getAuthToken,
-  getUserProducts, setUserProducts, getUserBills, setUserBills, 
-  getUserStats, updateUserStats
+  setUserProducts, setUserBills, updateUserStats
 } from './utils/userManager';
 import { productsApi, billsApi, statsApi } from './utils/mockApi';
 import { api, checkApiHealth } from './services/client';

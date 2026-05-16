@@ -9,6 +9,7 @@
 
 [build.environment]
   NODE_VERSION = "20"
+  REACT_APP_API_URL = "https://company-task-5vh3.onrender.com"
 
 # React Router / client-side routes
 [[redirects]]

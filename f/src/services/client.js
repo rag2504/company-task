@@ -35,7 +35,12 @@ export function apiEnabled() {
 
 /** Ping local/production API without auth */
 export async function checkApiHealth() {
-  const base = apiBase || 'http://localhost:5000';
+  const base =
+    apiBase ||
+    (process.env.NODE_ENV === 'development' ? 'http://localhost:5000' : '');
+  if (!base) {
+    throw new Error('REACT_APP_API_URL is not configured');
+  }
   const res = await axios.get(`${base}/api/health`, { timeout: 5000 });
   return res.data;
 }

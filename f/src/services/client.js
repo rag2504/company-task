@@ -1,19 +1,11 @@
 import axios from 'axios';
 import { getAuthToken } from '../utils/userManager';
+import { resolveApiBaseUrl } from '../config/apiConfig';
 
-function resolveApiBase() {
-  const fromEnv = (process.env.REACT_APP_API_URL || '').replace(/\/$/, '');
-  if (fromEnv) return fromEnv;
-  if (process.env.NODE_ENV === 'development') {
-    return 'http://localhost:5000';
-  }
-  return '';
-}
-
-const apiBase = resolveApiBase();
+const apiBase = resolveApiBaseUrl();
 
 export const api = axios.create({
-  baseURL: apiBase ? `${apiBase}/api` : '/api',
+  baseURL: `${apiBase}/api`,
   timeout: 60000,
 });
 
@@ -35,12 +27,6 @@ export function apiEnabled() {
 
 /** Ping local/production API without auth */
 export async function checkApiHealth() {
-  const base =
-    apiBase ||
-    (process.env.NODE_ENV === 'development' ? 'http://localhost:5000' : '');
-  if (!base) {
-    throw new Error('REACT_APP_API_URL is not configured');
-  }
-  const res = await axios.get(`${base}/api/health`, { timeout: 5000 });
+  const res = await axios.get(`${apiBase}/api/health`, { timeout: 5000 });
   return res.data;
 }

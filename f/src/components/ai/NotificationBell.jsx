@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { io } from 'socket.io-client';
 import { Bell, CheckCheck } from 'lucide-react';
-import { api } from '../../services/client';
+import { api, getApiBaseUrl } from '../../services/client';
 import { getAuthToken } from '../../utils/userManager';
 
 export default function NotificationBell({ darkMode }) {
@@ -25,13 +25,8 @@ export default function NotificationBell({ darkMode }) {
   }, []);
 
   useEffect(() => {
-    const fromEnv = (process.env.REACT_APP_API_URL || '').replace(/\/$/, '');
-    const inferred =
-      typeof window !== 'undefined'
-        ? `${window.location.protocol}//${window.location.hostname}:5000`
-        : '';
-    const apiOrigin = fromEnv || inferred;
-    if (!apiOrigin || !getAuthToken()) return undefined;
+    const apiOrigin = getApiBaseUrl();
+    if (!getAuthToken()) return undefined;
     const socket = io(apiOrigin, {
       transports: ['websocket'],
       auth: { token: getAuthToken() },

@@ -3,6 +3,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import { env } from './config/env.js';
+import { corsOrigin } from './config/cors.js';
 import { globalLimiter } from './middleware/rateLimit.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { asyncHandler } from './utils/asyncHandler.js';
@@ -26,7 +27,7 @@ app.use(
 );
 app.use(
   cors({
-    origin: env.FRONTEND_ORIGINS,
+    origin: corsOrigin,
     credentials: true,
   })
 );

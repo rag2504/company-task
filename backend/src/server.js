@@ -3,6 +3,7 @@ import { Server } from 'socket.io';
 import app from './app.js';
 import { connectDb } from './config/db.js';
 import { env } from './config/env.js';
+import { corsOrigin } from './config/cors.js';
 import { logger } from './utils/logger.js';
 import { socketAuthenticate } from './middleware/auth.js';
 
@@ -12,7 +13,7 @@ async function main() {
   const server = http.createServer(app);
   const io = new Server(server, {
     cors: {
-      origin: env.FRONTEND_ORIGINS,
+      origin: corsOrigin,
       credentials: true,
     },
   });

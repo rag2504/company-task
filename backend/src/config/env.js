@@ -38,7 +38,7 @@ export const env = {
   GROQ_MODEL: process.env.GROQ_MODEL || 'llama-3.3-70b-versatile',
   FRONTEND_ORIGINS: splitOrigins(
     process.env.FRONTEND_ORIGINS ||
-      'http://localhost:3000,http://localhost:3001'
+      'http://localhost:3000,http://localhost:3001,https://quickbill-point.netlify.app'
   ),
   isProduction,
   isRender,

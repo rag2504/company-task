@@ -82,8 +82,7 @@ const SignIn = ({ onSignIn, onSwitchToSignUp, onSwitchToForgotPassword, darkMode
           onSignIn(result.user);
         } else {
           setErrors({
-            general:
-              'Cannot reach the Quickbill API (is it running on port 5000?). Offline login also failed — check credentials.',
+            general: `Cannot reach the API at ${api.defaults.baseURL}. If you just deployed, wait for Render to wake up, then try again. Offline login also failed.`,
           });
         }
         return;

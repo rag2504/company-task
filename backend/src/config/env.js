@@ -8,17 +8,20 @@ const splitOrigins = (value) =>
     .map((s) => s.trim())
     .filter(Boolean);
 
-const isProduction = process.env.NODE_ENV === 'production';
+/** Set on Render (and similar PaaS) — use for bind host even if start command is wrong */
+const isRender = Boolean(process.env.RENDER);
+const isProduction =
+  process.env.NODE_ENV === 'production' || isRender;
 
-/** Render sets PORT; local `npm run dev` forces 5000 via package.json script */
-const port = isProduction
-  ? parseInt(process.env.PORT || '10000', 10)
-  : parseInt(process.env.PORT || '5000', 10);
+/** Render injects PORT; local dev defaults to 5000 */
+const port = parseInt(process.env.PORT || '5000', 10);
 
 /**
- * Render must listen on 0.0.0.0; local dev uses 127.0.0.1 (localhost only).
+ * Cloud hosts must listen on 0.0.0.0; local dev uses 127.0.0.1 only.
  */
-const host = process.env.HOST || (isProduction ? '0.0.0.0' : '127.0.0.1');
+const host =
+  process.env.HOST ||
+  (isRender || isProduction ? '0.0.0.0' : '127.0.0.1');
 
 export const env = {
   NODE_ENV: process.env.NODE_ENV || 'development',

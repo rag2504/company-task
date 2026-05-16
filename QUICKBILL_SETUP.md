@@ -70,6 +70,43 @@ You signed in with **offline / localStorage** mode (no JWT). Sign **out**, start
 
 Set **`GROQ_API_KEY`** in `backend/.env` and restart the backend.
 
+## Deploy (Vercel + Render)
+
+### Vercel (frontend in `f/`)
+
+1. Import the GitHub repo on [Vercel](https://vercel.com).
+2. Set **Root Directory** to `f`.
+3. Leave **Build Command**, **Install Command**, and **Output Directory** on **defaults** (do not use `cd f && …` — you are already inside `f`).
+   - Install: `npm install`
+   - Build: `npm run build`
+   - Output: `build`
+4. Environment variable:
+   - `REACT_APP_API_URL` = your Render URL, e.g. `https://company-task-5vh3.onrender.com` (no trailing slash).
+
+If **Root Directory** is empty (repo root), the root `vercel.json` uses `npm install --prefix f` instead.
+
+### Render (backend in `backend/`)
+
+1. New **Web Service** → connect the same repo.
+2. **Root Directory**: `backend`
+3. **Build Command**: `npm install`
+4. **Start Command**: `npm start` (not `npm run dev` — dev binds to localhost only).
+5. **Environment** (required):
+
+   | Key | Example |
+   |-----|---------|
+   | `NODE_ENV` | `production` |
+   | `MONGODB_URI` | Atlas connection string |
+   | `JWT_SECRET` | long random string |
+   | `GROQ_API_KEY` | Groq key (for AI) |
+   | `FRONTEND_ORIGINS` | `https://your-app.vercel.app` (comma-separated if multiple) |
+
+   Do **not** set `HOST=127.0.0.1` or a fixed `PORT` on Render — the platform sets `PORT`; the app binds `0.0.0.0` automatically.
+
+6. After deploy, open `https://YOUR-RENDER-URL/api/health` — should return `{"ok":true,...}`.
+
+Push these config changes to GitHub, then redeploy both services.
+
 ## Security notes
 
 - Never commit real `.env` secrets (Mongo passwords, production JWT, Groq keys).

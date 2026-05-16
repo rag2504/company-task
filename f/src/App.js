@@ -39,6 +39,7 @@ import StockPredictionPanel from './components/ai/StockPredictionPanel';
 import SmartSearchPanel from './components/ai/SmartSearchPanel';
 import ReportsHub from './components/ai/ReportsHub';
 import NotificationBell from './components/ai/NotificationBell';
+import QuickBillLogo from './components/QuickBillLogo';
 
 
 const PRODUCT_CATEGORIES = [
@@ -114,6 +115,11 @@ const App = () => {
   const handleSwitchToForgotPassword = () => {
     setShowForgotPassword(true);
     setShowSignUp(false);
+  };
+
+  const goHome = () => {
+    setActiveTab('dashboard');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   // Helper functions for updating user data
@@ -312,17 +318,7 @@ const App = () => {
       <header className={`shadow-sm border-b transition-all duration-300 ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white'} sticky top-0 z-40 backdrop-blur-sm bg-opacity-95`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
-            <div className="flex items-center space-x-3">
-              <Package className={`h-8 w-8 transition-all duration-300 ${darkMode ? 'text-blue-400' : 'text-blue-600'} hover:scale-110 hover:rotate-12`} />
-              <div>
-                <h1 className="text-2xl font-bold transition-all duration-300 hover:scale-105 tracking-tight">
-                  Quickbill
-                </h1>
-                <p className={`text-[11px] uppercase tracking-[0.2em] ${darkMode ? 'text-gray-500' : 'text-gray-500'}`}>
-                  Point of Sale System
-                </p>
-              </div>
-            </div>
+            <QuickBillLogo darkMode={darkMode} onHome={goHome} />
             <nav className="flex flex-wrap gap-2 sm:space-x-8 items-center justify-center sm:justify-end">
               <button
                 onClick={() => setActiveTab('ai-dashboard')}

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Eye, EyeOff, AlertCircle, UserPlus } from 'lucide-react';
+import { Eye, EyeOff, AlertCircle } from 'lucide-react';
+import QuickBillLogo from './components/QuickBillLogo';
 import {
   registerUser,
   USER_ROLES,
@@ -152,18 +153,13 @@ const SignUp = ({ onSignUp, onSwitchToSignIn, darkMode }) => {
           darkMode ? 'bg-gray-800 border border-gray-700' : 'bg-white/80 backdrop-blur-sm border border-white/20'
         }`}>
           
-          {/* Logo and Header */}
-          <div className="text-center mb-8">
-            <div className={`inline-flex items-center justify-center w-16 h-16 rounded-full mb-4 transition-all duration-300 hover:scale-110 ${
-              darkMode ? 'bg-green-600' : 'bg-gradient-to-br from-green-500 to-green-600'
-            }`}>
-              <UserPlus className="h-8 w-8 text-white" />
-            </div>
-            <h1 className={`text-3xl font-bold mb-2 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+          <div className="flex flex-col items-center mb-8">
+            <QuickBillLogo darkMode={darkMode} size="lg" className="mb-4" />
+            <h1 className={`text-2xl font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
               Create Account
             </h1>
-            <p className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-              Join Provision Store team
+            <p className={`text-sm mt-1 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+              Set up your store on QuickBill
             </p>
           </div>
 

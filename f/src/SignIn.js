@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Package, Eye, EyeOff, AlertCircle } from 'lucide-react';
+import { Eye, EyeOff, AlertCircle } from 'lucide-react';
+import QuickBillLogo from './components/QuickBillLogo';
 import {
   authenticateUser,
   setCurrentUser,
@@ -129,29 +130,21 @@ const SignIn = ({ onSignIn, onSwitchToSignUp, onSwitchToForgotPassword, darkMode
               : 'bg-white/80 backdrop-blur-sm border border-white/20'
           }`}
         >
-          <div className="text-center mb-8">
-            <div
-              className={`inline-flex items-center justify-center w-16 h-16 rounded-full mb-4 transition-all duration-300 hover:scale-110 ${
-                darkMode
-                  ? 'bg-blue-600'
-                  : 'bg-gradient-to-br from-blue-500 to-blue-600'
-              }`}
-            >
-              <Package className="h-8 w-8 text-white" />
-            </div>
+          <div className="flex flex-col items-center mb-8">
+            <QuickBillLogo darkMode={darkMode} size="lg" className="mb-4" />
             <h1
-              className={`text-3xl font-bold mb-2 ${
+              className={`text-2xl font-semibold ${
                 darkMode ? 'text-white' : 'text-gray-900'
               }`}
             >
               Sign In
             </h1>
             <p
-              className={`text-sm ${
+              className={`text-sm mt-1 ${
                 darkMode ? 'text-gray-300' : 'text-gray-600'
               }`}
             >
-              Welcome back to Provision Store
+              Welcome back
             </p>
           </div>
 

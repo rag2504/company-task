@@ -24,6 +24,7 @@ import {
   Clock,
 } from 'lucide-react';
 import { api } from '../../services/client';
+import { formatApiError } from '../../utils/apiErrors';
 
 const COLORS = ['#6366f1', '#8b5cf6', '#ec4899', '#14b8a6', '#f59e0b', '#3b82f6'];
 
@@ -74,19 +75,7 @@ export default function AIDashboard({ darkMode }) {
         setSummaryDaily(sum.data.summary || '');
       } catch (e) {
         if (!cancelled) {
-          const status = e.response?.status;
-          let msg = e.response?.data?.message || e.message;
-          if (!e.response && e.request) {
-            msg =
-              'Network Error — start the backend: cd backend && npm run dev (http://localhost:5000), then restart the React app.';
-          } else if (status === 404) {
-            msg =
-              'Could not reach Quickbill API routes (404). Start the backend on port 5000 and restart `npm start`.';
-          } else if (status === 401) {
-            msg =
-              'AI requires a server login. Sign out, ensure the backend is running, then sign in again (MongoDB user, e.g. demo@quickbill.app after npm run seed).';
-          }
-          setErr(msg);
+          setErr(formatApiError(e));
         }
       } finally {
         if (!cancelled) setLoading(false);

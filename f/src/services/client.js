@@ -2,14 +2,12 @@ import axios from 'axios';
 import { getAuthToken } from '../utils/userManager';
 import { resolveApiBaseUrl } from '../config/apiConfig';
 
-const apiBase = resolveApiBaseUrl();
-
 export const api = axios.create({
-  baseURL: `${apiBase}/api`,
-  timeout: 60000,
+  timeout: 90000,
 });
 
 api.interceptors.request.use((config) => {
+  config.baseURL = `${resolveApiBaseUrl()}/api`;
   const token = getAuthToken();
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
@@ -18,15 +16,16 @@ api.interceptors.request.use((config) => {
 });
 
 export function getApiBaseUrl() {
-  return apiBase;
+  return resolveApiBaseUrl();
 }
 
 export function apiEnabled() {
   return Boolean(getAuthToken());
 }
 
-/** Ping local/production API without auth */
+/** Ping API without auth */
 export async function checkApiHealth() {
-  const res = await axios.get(`${apiBase}/api/health`, { timeout: 5000 });
+  const base = resolveApiBaseUrl();
+  const res = await axios.get(`${base}/api/health`, { timeout: 30000 });
   return res.data;
 }

@@ -8,6 +8,8 @@ import {
   setRemoteAuthSession,
 } from './utils/userManager';
 import { api } from './services/client';
+import { isHostedProduction } from './config/apiConfig';
+import { formatApiError } from './utils/apiErrors';
 
 const SignUp = ({ onSignUp, onSwitchToSignIn, darkMode }) => {
   const [formData, setFormData] = useState({
@@ -94,6 +96,10 @@ const SignUp = ({ onSignUp, onSwitchToSignIn, darkMode }) => {
         err.code === 'ECONNABORTED' ||
         err.code === 'ERR_NETWORK'
       ) {
+        if (isHostedProduction()) {
+          setErrors({ general: formatApiError(err) });
+          return;
+        }
         await new Promise((r) => setTimeout(r, 300));
         const result = registerUser({
           name: formData.name,

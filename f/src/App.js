@@ -29,7 +29,9 @@ import {
   setUserProducts, setUserBills, updateUserStats
 } from './utils/userManager';
 import { productsApi, billsApi, statsApi } from './utils/mockApi';
-import { api, checkApiHealth } from './services/client';
+import { api, checkApiHealth, getApiBaseUrl } from './services/client';
+import { isHostedProduction } from './config/apiConfig';
+import { formatApiError } from './utils/apiErrors';
 import { getAvailableUnits, validateBillStock } from './utils/stockUtils';
 import AIDashboard from './components/ai/AIDashboard';
 import AIChatPanel from './components/ai/AIChatPanel';
@@ -153,8 +155,17 @@ const App = () => {
       try {
         const user = getCurrentUser();
         if (user && user.email) {
-          setCurrentUserState(user);
-          setIsAuthenticated(true);
+          if (isHostedProduction() && !getAuthToken()) {
+            signOutUser();
+            setToast({
+              message:
+                'Offline session cleared. Sign in with your Quickbill account to use production.',
+              type: 'error',
+            });
+          } else {
+            setCurrentUserState(user);
+            setIsAuthenticated(true);
+          }
         }
       } catch (error) {
         console.error('Error checking authentication:', error);
@@ -217,21 +228,28 @@ const App = () => {
   }, [isAuthenticated, currentUser?.id, fetchProducts, fetchBills, fetchStats]);
 
   useEffect(() => {
-    if (!isAuthenticated) return;
-    if (getAuthToken()) return;
+    if (!isAuthenticated || getAuthToken()) return;
+
+    if (isHostedProduction()) {
+      setToast({
+        message:
+          'Sign out and sign in with your server account to sync data and use AI features.',
+        type: 'error',
+      });
+      return;
+    }
 
     checkApiHealth()
       .then(() => {
         setToast({
           message:
-            'API is online but you are in offline mode. Sign out and sign in again (use your MongoDB account) for stock sync & AI.',
+            'API is online but you are in offline mode. Sign out and sign in again for stock sync and AI.',
           type: 'error',
         });
       })
       .catch(() => {
         setToast({
-          message:
-            'Backend not reachable at http://localhost:5000 — run "npm run dev" in the backend folder.',
+          message: `Backend not reachable at ${getApiBaseUrl()}. Start the backend locally.`,
           type: 'error',
         });
       });
@@ -2646,11 +2664,7 @@ const BillForm = ({ bill, products, bills, onClose, onSave }) => {
         formData,
         totalAmount
       });
-      const msg =
-        error.response?.data?.message ||
-        error.message ||
-        'Network error. Start backend with: cd backend && npm run dev';
-      setBackendError(msg);
+      setBackendError(formatApiError(error));
     } finally {
       setSubmitting(false);
     }

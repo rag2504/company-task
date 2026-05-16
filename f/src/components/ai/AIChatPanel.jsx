@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Send, Mic, Sparkles, Loader2 } from 'lucide-react';
 import { api } from '../../services/client';
+import { formatApiError } from '../../utils/apiErrors';
 
 const PRESETS = [
   'How many Coca Cola bottles are left?',
@@ -54,11 +55,7 @@ export default function AIChatPanel({ darkMode }) {
       const { data } = await api.post('/ai/chat', { message: trimmed });
       pushAssistant(data.reply);
     } catch (e) {
-      const msg =
-        !e.response && e.request
-          ? 'Network Error — run backend: cd backend && npm run dev, then sign in again with your API account.'
-          : e.response?.data?.message || e.message || 'Chat failed.';
-      pushAssistant(msg);
+      pushAssistant(formatApiError(e));
     } finally {
       setLoading(false);
     }

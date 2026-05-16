@@ -8,6 +8,8 @@ import {
   validatePassword,
 } from './utils/userManager';
 import { api } from './services/client';
+import { isHostedProduction } from './config/apiConfig';
+import { formatApiError } from './utils/apiErrors';
 
 const SignIn = ({ onSignIn, onSwitchToSignUp, onSwitchToForgotPassword, darkMode }) => {
   const [formData, setFormData] = useState({
@@ -75,6 +77,10 @@ const SignIn = ({ onSignIn, onSwitchToSignUp, onSwitchToForgotPassword, darkMode
         err.code === 'ECONNABORTED' ||
         err.code === 'ERR_NETWORK'
       ) {
+        if (isHostedProduction()) {
+          setErrors({ general: formatApiError(err) });
+          return;
+        }
         await new Promise((r) => setTimeout(r, 200));
         const result = authenticateUser(formData.email, formData.password);
         if (result.success) {
@@ -82,7 +88,7 @@ const SignIn = ({ onSignIn, onSwitchToSignUp, onSwitchToForgotPassword, darkMode
           onSignIn(result.user);
         } else {
           setErrors({
-            general: `Cannot reach the API at ${api.defaults.baseURL}. If you just deployed, wait for Render to wake up, then try again. Offline login also failed.`,
+            general: `${formatApiError(err)} Offline login also failed.`,
           });
         }
         return;
